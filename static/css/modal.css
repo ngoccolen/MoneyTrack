@@ -1,0 +1,118 @@
+/* ====================================================== */
+/* MODAL FORM STYLE */
+/* ====================================================== */
+:root {
+    /* Kế thừa từ style.css để sử dụng biến */
+    --color-primary: #667eea;
+    --color-success: #10b981;
+    --color-danger: #ef4444;
+    --color-text: #1e293b;
+    --color-text-secondary: #64748b;
+    --color-border: #f0f0f0;
+    --color-bg-light: #f1f5f9;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Mặc định ẩn, sẽ được hiển thị bằng JS */
+    display: none; 
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    width: 450px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+.modal-header {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-close {
+    cursor: pointer;
+    color: var(--color-text-secondary);
+}
+.modal-close:hover {
+    color: var(--color-text);
+}
+
+/* Form Group */
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 5px;
+}
+.form-group input[type="text"], 
+.form-group input[type="number"], 
+.form-group textarea, 
+.form-group select,
+.form-group input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+/* Nút Toggle Cho Vay/Thu Chi */
+.toggle-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+.toggle-btn {
+    flex-grow: 1;
+    padding: 10px;
+    text-align: center;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--color-border);
+    transition: all 0.2s;
+}
+.toggle-btn.active.income, .toggle-btn.active.loan-out {
+    background-color: var(--color-success);
+    color: white;
+    border-color: var(--color-success);
+}
+.toggle-btn.active.expense, .toggle-btn.active.loan-in {
+    background-color: var(--color-danger);
+    color: white;
+    border-color: var(--color-danger);
+}
+.toggle-btn:not(.active) {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-secondary);
+}
+.toggle-btn:not(.active):hover {
+    background-color: #dee2e6;
+}
+
+/* Footer Nút Hủy/Lưu */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}

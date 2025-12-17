@@ -1,0 +1,159 @@
+/* ====================================================== */
+/* DASHBOARD STYLES (KPI, BANNER, CHARTS) - TỐI GIẢN HÓA */
+/* ====================================================== */
+:root {
+    --color-primary: #667eea;
+    --color-success: #10b981;
+    --color-danger: #ef4444;
+    --color-text: #1e293b;
+    --color-text-secondary: #64748b;
+    --color-border: #f0f0f0;
+    --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-elevated: 0 8px 24px rgba(102, 126, 234, 0.15);
+}
+
+/* Header đơn giản hơn */
+.dashboard-header {
+    background-color: transparent; /* Loại bỏ gradient rực rỡ */
+    border-radius: 0;
+    padding: 0 0 24px 0;
+    margin-bottom: 0;
+    color: var(--color-text);
+    box-shadow: none;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--color-text);
+}
+
+.dashboard-header p {
+    opacity: 1;
+    font-size: 1rem;
+    color: var(--color-text-secondary);
+}
+
+/* Banner Chào mừng (Điều chỉnh style đã có) */
+.cta-banner {
+    background-color: #FFFFFF; /* Nền trắng */
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.cta-banner h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-primary); /* Tiêu đề màu tím */
+    margin-bottom: 8px;
+}
+
+.cta-banner p {
+    color: var(--color-text-secondary);
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Cấu trúc KPI Card (4 cột gọn gàng) */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--color-border);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card:hover {
+    transform: none;
+    box-shadow: var(--shadow-elevated);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-text); 
+}
+
+/* Loại bỏ icon background màu mè, chỉ dùng màu chữ */
+.stat-icon {
+    display: none; /* Ẩn icon lớn */
+}
+.income-card .stat-value { color: var(--color-success); }
+.expense-card .stat-value { color: var(--color-danger); }
+.balance-card .stat-value { color: var(--color-primary); }
+.saving-card .stat-value { color: var(--color-success); }
+
+.stat-change {
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+
+/* Charts Section Layout */
+.charts-section {
+    margin-top: 30px;
+}
+
+.charts-grid {
+    display: flex; /* Đổi sang flex để dễ dàng tạo bố cục 2/1 */
+    gap: 24px;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--color-border);
+    flex: 1; /* Chia đều mặc định */
+}
+
+/* Áp dụng bố cục 2/1 cho chart */
+.chart-card.large {
+    flex: 2; /* 66.66% */
+}
+.chart-card.small {
+    flex: 1; /* 33.33% */
+}
+
+.chart-header {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--color-text);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}

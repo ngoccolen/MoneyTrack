@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Tổng Quan Tài Chính</h1>
+    <p>Theo dõi chi tiêu và thu nhập của bạn</p>
+</div>
+
+<div class="cta-banner">
+    <div style="flex-shrink: 0; font-size: 40px;">💡</div>
+    <div>
+        <h3>🪴 Hành trình bắt đầu!</h3>
+        <p>Bạn mới đạt 0.0% mục tiêu thu nhập. Hôm nay là ngày tuyệt vời để bắt đầu bứt phá! Hãy nhập giao dịch đầu tiên.</p>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card income-card">
+        <div class="stat-label">Tổng Thu (Tháng)</div>
+        <div class="stat-value">{{ vnd(kpi_data.income) }}đ</div>
+        <div class="stat-change color-success">
+            ↑ 10% 
+        </div>
+    </div>
+
+    <div class="stat-card expense-card">
+        <div class="stat-label">Tổng Chi (Tháng)</div>
+        <div class="stat-value">{{ vnd(kpi_data.expense) }}đ</div>
+        <div class="stat-change color-danger">
+            ↓ 5% 
+        </div>
+    </div>
+
+    <div class="stat-card balance-card">
+        <div class="stat-label">Số Dư Tổng</div>
+        <div class="stat-value">{{ vnd(kpi_data.balance) }}đ</div>
+        <div class="stat-change color-secondary">
+             ↓ 5%
+        </div>
+    </div>
+
+    <div class="stat-card saving-card">
+        <div class="stat-label">Tỷ Lệ Tiết Kiệm</div>
+        <div class="stat-value">{{ kpi_data.saving_pct | round(1) }}%</div>
+        <div class="stat-change color-success">
+            ↑ 2% 
+        </div>
+    </div>
+</div>
+
+<div class="charts-section">
+    <h2 class="section-title" style="font-size: 24px; font-weight: 700; margin-bottom: 24px; color: #1e293b;">Xu Hướng Dòng Tiền & Phân Tích Chi Tiêu</h2>
+    
+    <div class="charts-grid" style="margin-bottom: 24px;">
+        <div class="chart-card large">
+            <div class="chart-header">Dòng Tiền Thu/Chi Ròng 6 Tháng Gần Nhất</div>
+            <div class="chart-container">
+                <canvas id="monthlyFlowChart"></canvas> 
+            </div>
+        </div>
+
+        <div class="chart-card small">
+            <div class="chart-header">Chi Tiêu Theo Danh Mục</div>
+            <div class="chart-container" style="height: 250px;">
+                <canvas id="categoryPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            <div class="chart-card">
+                <div class="chart-header">Xu Hướng Thu Nhập 6 Tháng</div>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="monthlyIncomeChart"></canvas> 
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="chart-card">
+                <div class="chart-header">Xu Hướng Chi Tiêu 6 Tháng</div>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="monthlyExpenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const PRIMARY_COLOR = '#667eea'; 
+    const SUCCESS_COLOR = '#10b981'; 
+    const DANGER_COLOR = '#ef4444';  
+    const ACCENT_COLORS = [
+        PRIMARY_COLOR, 
+        '#764ba2', 
+        '#4facfe', 
+        '#feca57', 
+        '#fa709a', 
+        '#43e97b', 
+    ];
+
+    const categoryLabels = JSON.parse('{{ category_labels_json | safe }}');
+    const categoryValues = JSON.parse('{{ category_values_json | safe }}');
+    
+    const monthlyLabels = ['Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12']; 
+    const monthlyIncome = [20000, 18000, 22000, 19000, 21000, 25000];
+    const monthlyExpenseRaw = [10000, 12000, 15000, 11000, 14000, 16000]; 
+    const monthlyExpenseNegative = monthlyExpenseRaw.map(v => -v); 
+    
+
+    function createLineChart(ctx, label, data, color) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    borderColor: color,
+                    backgroundColor: color + '30', 
+                    tension: 0.4, 
+                    fill: true, 
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        grid: { color: '#e2e8f0', drawBorder: false },
+                        ticks: { 
+                            font: { size: 12 }, color: '#64748b',
+                            callback: function(value) {
+                                return value.toLocaleString() + 'K';
+                            } 
+                        },
+                    },
+                    x: { 
+                        grid: { display: false, drawBorder: false },
+                        ticks: { font: { size: 12, weight: '600' }, color: '#1e293b' },
+                    }
+                },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(30, 41, 59, 0.9)', 
+                        padding: 10,
+                        titleFont: { size: 13, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        cornerRadius: 6
+                    }
+                }
+            }
+        });
+    }
+
+    // 1. Biểu đồ Đường: Thu Nhập Theo Tháng
+    const incomeCtx = document.getElementById('monthlyIncomeChart').getContext('2d');
+    createLineChart(incomeCtx, 'Thu nhập', monthlyIncome, SUCCESS_COLOR);
+    
+    // 2. Biểu đồ Đường: Chi Tiêu Theo Tháng
+    const expenseCtx = document.getElementById('monthlyExpenseChart').getContext('2d');
+    createLineChart(expenseCtx, 'Chi tiêu', monthlyExpenseRaw, DANGER_COLOR);
+
+
+    // 3. Biểu đồ Cột: Dòng Tiền Thu/Chi 
+    const flowCtx = document.getElementById('monthlyFlowChart').getContext('2d');
+    new Chart(flowCtx, {
+        type: 'bar',
+        data: {
+            labels: monthlyLabels,
+            datasets: [
+                {
+                    label: 'Thu nhập (Ngàn VND)',
+                    data: monthlyIncome,
+                    backgroundColor: SUCCESS_COLOR,
+                    borderRadius: 6,
+                },
+                {
+                    label: 'Chi tiêu (Ngàn VND)',
+                    data: monthlyExpenseNegative, 
+                    backgroundColor: DANGER_COLOR,
+                    borderRadius: 6,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            barPercentage: 0.8,
+            categoryPercentage: 0.8,
+            scales: {
+                y: { 
+                    beginAtZero: false,
+                    grid: { color: '#e2e8f0', drawBorder: false },
+                    ticks: { font: { size: 12 }, color: '#64748b',
+                        callback: function(value, index, ticks) {
+                            return Math.abs(value).toLocaleString() + 'K'; 
+                        } 
+                    },
+                    stacked: false
+                },
+                x: { 
+                    grid: { display: false, drawBorder: false },
+                    ticks: { font: { size: 12, weight: '600' }, color: '#1e293b' },
+                    stacked: false
+                }
+            },
+            plugins: { 
+                legend: { 
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 16
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                    padding: 10,
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    cornerRadius: 6
+                }
+            }
+        }
+    });
+
+    // 4. Biểu đồ Tròn - Chi Tiêu Theo Danh Mục
+    const pieCtx = document.getElementById('categoryPieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                data: categoryValues,
+                backgroundColor: ACCENT_COLORS,
+                borderWidth: 0, 
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    position: 'right', 
+                    labels: {
+                        padding: 16,
+                        font: { size: 12, weight: '600' },
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(30, 41, 59, 0.9)', 
+                    padding: 10,
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    cornerRadius: 6
+                }
+            },
+            cutout: '70%'
+        }
+    });
+    
+</script>
+{% endblock %}

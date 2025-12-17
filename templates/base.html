@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyTrack | Quản lý Tài chính</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">MoneyTrack</div>
+            </div>
+
+            <nav class="menu">
+                <div class="nav-group">
+                    <a href="{{ url_for('dashboard') }}" class="nav-item {% if page == 'dashboard' %}active{% endif %}">
+                        <span class="icon"></span> Dashboard
+                    </a>
+
+                    <div id="finance-parent" class="nav-item parent-item {% if page in ['thu_chi', 'vay_no'] %}active open{% endif %}">
+                        <span class="icon"></span> Quản lý tài chính <span class="toggle-icon">▼</span>
+                    </div>
+                    
+                    <div id="finance-submenu" class="submenu {% if page in ['thu_chi', 'vay_no'] %}open{% endif %}">
+                        <a href="{{ url_for('thu_chi') }}" class="sub-item {% if page == 'thu_chi' %}active{% endif %}">
+                            Thu Chi
+                        </a>
+                        <a href="{{ url_for('vay_no') }}" class="sub-item {% if page == 'vay_no' %}active{% endif %}">
+                            Vay Nợ
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-logout">Đăng xuất</button>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
