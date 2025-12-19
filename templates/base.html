@@ -8,6 +8,125 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        /* CSS CHO CHATBOX AI CAO CẤP */
+        #ai-widget-container {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 10000;
+        }
+
+        #ai-chat-window {
+            width: 350px;
+            height: 480px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .ai-chat-header {
+            background: linear-gradient(135deg, #7367f0 0%, #ce9ffc 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ai-chat-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Bong bóng chat */
+        .message {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 15px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .ai-msg {
+            background: #ffffff;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .user-msg {
+            background: #7367f0;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        /* Khu vực nhập liệu */
+        .ai-chat-footer {
+            padding: 12px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #ai-chat-input {
+            flex: 1;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 8px 15px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        #btn-ai-send {
+            background: #7367f0;
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        #btn-ai-send:hover { background: #5e50ee; }
+
+        .ai-chat-hidden {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+        }
+
+        #ai-float-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #7367f0;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(115, 103, 240, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -15,36 +134,50 @@
             <div class="sidebar-header">
                 <div class="logo">MoneyTrack</div>
             </div>
-
             <nav class="menu">
                 <div class="nav-group">
                     <a href="{{ url_for('dashboard') }}" class="nav-item {% if page == 'dashboard' %}active{% endif %}">
                         <span class="icon"></span> Dashboard
                     </a>
-
-                    <div id="finance-parent" class="nav-item parent-item {% if page in ['thu_chi', 'vay_no'] %}active open{% endif %}">
+                    <div id="finance-parent" class="nav-item parent-item {% if page in ['thu_chi', 'vay_no', 'scan'] %}active open{% endif %}">
                         <span class="icon"></span> Quản lý tài chính <span class="toggle-icon">▼</span>
                     </div>
-                    
-                    <div id="finance-submenu" class="submenu {% if page in ['thu_chi', 'vay_no'] %}open{% endif %}">
-                        <a href="{{ url_for('thu_chi') }}" class="sub-item {% if page == 'thu_chi' %}active{% endif %}">
-                            Thu Chi
-                        </a>
-                        <a href="{{ url_for('vay_no') }}" class="sub-item {% if page == 'vay_no' %}active{% endif %}">
-                            Vay Nợ
-                        </a>
+                    <div id="finance-submenu" class="submenu {% if page in ['thu_chi', 'vay_no', 'scan'] %}open{% endif %}">
+                        <a href="{{ url_for('thu_chi') }}" class="sub-item {% if page == 'thu_chi' %}active{% endif %}">📑 Thu Chi</a>
+                        <a href="{{ url_for('vay_no') }}" class="sub-item {% if page == 'vay_no' %}active{% endif %}">🤝 Vay Nợ</a>
+                        <a href="{{ url_for('scan_page') }}" class="sub-item {% if page == 'scan' %}active{% endif %}">📸 Quét hóa đơn</a>
                     </div>
                 </div>
             </nav>
-
-            <div class="sidebar-footer">
-                <button class="btn btn-logout">Đăng xuất</button>
-            </div>
         </aside>
         
         <main class="main-content">
             {% block content %}{% endblock %}
         </main>
+    </div>
+
+    <div id="ai-widget-container">
+        <div id="ai-chat-window" class="ai-chat-hidden">
+            <div class="ai-chat-header">
+                <strong>✨ MoneyTrack AI</strong>
+                <button id="close-chat" style="background:none; border:none; color:white; cursor:pointer; font-size:20px;">&times;</button>
+            </div>
+            
+            <div class="ai-chat-body" id="ai-chat-content">
+                <div class="message ai-msg">
+                    Xin chào! Tôi là AI trợ lý tài chính. Bạn vừa chi tiêu gì à? Hãy nhập theo cách tự nhiên nhé (VD: "ăn trưa 50k").
+                </div>
+            </div>
+
+            <div class="ai-chat-footer">
+                <input type="text" id="ai-chat-input" placeholder="Nhắn tin cho AI...">
+                <button id="btn-ai-send">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <button id="ai-float-button">✨</button>
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>

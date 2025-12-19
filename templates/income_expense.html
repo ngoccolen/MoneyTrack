@@ -23,6 +23,38 @@
             </div>
         </div>
     </div>
+
+    <div class="filter-card" style="margin-top: 20px;">
+        <form action="{{ url_for('thu_chi') }}" method="GET" class="filter-form">
+            <div class="filter-group">
+                <label class="filter-label">Thời gian</label>
+                <div class="input-range">
+                    <input type="date" name="start_date" class="modern-input" value="{{ request.args.get('start_date', '') }}">
+                    <span class="separator">→</span>
+                    <input type="date" name="end_date" class="modern-input" value="{{ request.args.get('end_date', '') }}">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Danh mục</label>
+                <select name="category_filter" class="modern-input">
+                    <option value="all">Tất cả danh mục</option>
+                    <option value="Ăn uống" {% if request.args.get('category_filter') == 'Ăn uống' %}selected{% endif %}>Ăn uống</option>
+                    <option value="Lương" {% if request.args.get('category_filter') == 'Lương' %}selected{% endif %}>Lương</option>
+                    <option value="Mua sắm" {% if request.args.get('category_filter') == 'Mua sắm' %}selected{% endif %}>Mua sắm</option>
+                    <option value="Nhà ở" {% if request.args.get('category_filter') == 'Nhà ở' %}selected{% endif %}>Nhà ở</option>
+                    <option value="Khác" {% if request.args.get('category_filter') == 'Khác' %}selected{% endif %}>Khác</option>
+                </select>
+            </div>
+
+            <div class="filter-actions" style="align-self: flex-end;">
+                <button type="submit" class="btn-search">
+                    <i>🔍</i> Lọc dữ liệu
+                </button>
+                <a href="{{ url_for('thu_chi') }}" class="btn-reset">Đặt lại</a>
+            </div>
+        </form>
+    </div>
     
     <div class="row" style="align-items: center; justify-content: space-between; margin-bottom: 10px; margin-top: 30px;">
         <div class="col-6">
@@ -37,8 +69,8 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th style="width: 10%;">NGÀY</th>
-                    <th style="width: 35%;">MÔ TẢ</th>
+                    <th style="width: 15%;">NGÀY</th>
+                    <th style="width: 30%;">MÔ TẢ</th>
                     <th style="width: 20%;">DANH MỤC</th>
                     <th style="width: 15%;">SỐ TIỀN</th>
                     <th style="width: 20%; text-align: center;">THAO TÁC</th>
@@ -47,15 +79,18 @@
             <tbody>
                 {% for tx in transactions %}
                 <tr>
-                    <td>{{ tx.NGÀY }}</td>
-                    <td>{{ tx['MÔ TẢ'] }}</td>
-                    <td>{{ tx['DANH MỤC'] }}</td>
-                    <td class="{% if tx['SỐ TIỀN'] > 0 %}color-success{% else %}color-danger{% endif %}">
-                        {{ vnd(tx['SỐ TIỀN']|abs) }} đ
+                    <td>{{ tx.date | format_date }}</td>
+                    <td>{{ tx.description }}</td>
+                    <td>{{ tx.category }}</td>
+                    <td class="{% if tx.amount > 0 %}color-success{% else %}color-danger{% endif %}">
+                        {{ vnd(tx.amount) }} đ
                     </td>
                     <td style="text-align: center;">
                         <button class="btn btn-secondary" style="padding: 6px 10px; margin-right: 5px;">Sửa</button>
-                        <button class="btn btn-danger" style="padding: 6px 10px;">Xóa</button>
+                        <a href="{{ url_for('delete_transaction', id=tx.id) }}" 
+                           class="btn btn-danger" 
+                           style="padding: 6px 10px; text-decoration: none;"
+                           onclick="return confirm('Bạn có chắc chắn muốn xóa giao dịch này?')">Xóa</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -75,7 +110,6 @@
                     <label>LOẠI GIAO DỊCH</label>
                     <div class="toggle-group" id="transaction-type-toggle">
                         <input type="hidden" name="transaction_type" id="transaction-type-input" value="income">
-                        
                         <div class="toggle-btn active income" data-type="income">Thu nhập</div>
                         <div class="toggle-btn expense" data-type="expense">Chi tiêu</div>
                     </div>
@@ -130,22 +164,18 @@
         const closeModal = () => { modal.style.display = 'none'; };
         const openModal = () => { modal.style.display = 'flex'; };
 
-        openBtn.addEventListener('click', openModal);
-
-        closeBtn.addEventListener('click', closeModal);
-        cancelBtn.addEventListener('click', closeModal);
+        if(openBtn) openBtn.addEventListener('click', openModal);
+        if(closeBtn) closeBtn.addEventListener('click', closeModal);
+        if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
         window.addEventListener('click', (event) => {
-            if (event.target === modal) {
-                closeModal();
-            }
+            if (event.target === modal) closeModal();
         });
         
         typeToggle.querySelectorAll('.toggle-btn').forEach(button => {
             button.addEventListener('click', function() {
                 typeToggle.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
-                            this.classList.add('active');
-                
+                this.classList.add('active');
                 typeInput.value = this.dataset.type;
             });
         });

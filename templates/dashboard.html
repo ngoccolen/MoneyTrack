@@ -6,6 +6,29 @@
     <p>Theo dõi chi tiêu và thu nhập của bạn</p>
 </div>
 
+<div id="ai-widget-container">
+    <div id="ai-chat-window" class="ai-chat-hidden">
+        <div class="ai-chat-header">
+            <span>✨ AI Assistant</span>
+            <button id="close-chat" style="background:none; border:none; color:white; cursor:pointer; font-size:20px;">&times;</button>
+        </div>
+        <div class="ai-chat-body" style="padding: 15px;">
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Nhập chi tiêu (VD: "cafe sáng 35k")</p>
+            <textarea id="ai-chat-input" placeholder="Bạn đã chi gì hôm nay..." 
+                      style="width: 100%; height: 70px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; resize: none; font-size: 14px;"></textarea>
+            
+            <div id="ai-chat-result" style="margin-top: 10px;"></div>
+        </div>
+        <div class="ai-chat-footer" style="padding: 10px;">
+            <button id="btn-ai-process" class="btn btn-primary" style="width: 100%; padding: 8px; border-radius: 8px;">Phân tích AI</button>
+        </div>
+    </div>
+
+    <button id="ai-float-button" title="Hỗ trợ AI">
+        <span>✨</span>
+    </button>
+</div>
+
 <div class="cta-banner">
     <div style="flex-shrink: 0; font-size: 40px;">💡</div>
     <div>
@@ -14,39 +37,84 @@
     </div>
 </div>
 
-<div class="stats-grid">
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+    <div class="stat-card wallet-card" onclick="openBalanceModal()" style="cursor: pointer; border: 2px dashed #667eea; background: #f8fafc;">
+        <div class="stat-label">Ví Chính (Ban đầu)</div>
+        <div class="stat-value" id="display-balance">{{ vnd(account.balance if account else 0) }}đ</div>
+        <div class="stat-change" style="color: #667eea;">Chạm để cập nhật</div>
+    </div>
+
     <div class="stat-card income-card">
         <div class="stat-label">Tổng Thu (Tháng)</div>
         <div class="stat-value">{{ vnd(kpi_data.income) }}đ</div>
-        <div class="stat-change color-success">
-            ↑ 10% 
-        </div>
+        <div class="stat-change color-success">↑ 10% </div>
     </div>
 
     <div class="stat-card expense-card">
         <div class="stat-label">Tổng Chi (Tháng)</div>
         <div class="stat-value">{{ vnd(kpi_data.expense) }}đ</div>
-        <div class="stat-change color-danger">
-            ↓ 5% 
-        </div>
+        <div class="stat-change color-danger">↓ 5% </div>
     </div>
 
     <div class="stat-card balance-card">
-        <div class="stat-label">Số Dư Tổng</div>
+        <div class="stat-label">Số Dư Hiện Tại</div>
         <div class="stat-value">{{ vnd(kpi_data.balance) }}đ</div>
-        <div class="stat-change color-secondary">
-             ↓ 5%
-        </div>
-    </div>
-
-    <div class="stat-card saving-card">
-        <div class="stat-label">Tỷ Lệ Tiết Kiệm</div>
-        <div class="stat-value">{{ kpi_data.saving_pct | round(1) }}%</div>
-        <div class="stat-change color-success">
-            ↑ 2% 
-        </div>
+        <div class="stat-change color-secondary">Khả dụng</div>
     </div>
 </div>
+
+<div id="balanceModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Cập nhật số dư ban đầu</h3>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Nhập số tiền thực tế bạn đang có trong ví</p>
+        <form action="{{ url_for('update_balance') }}" method="POST">
+            <input type="number" name="balance" class="modern-input" 
+                   placeholder="VD: 5000000" required autofocus 
+                   style="width: 100%; font-size: 1.2rem; padding: 12px; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="btn" onclick="closeBalanceModal()" style="flex: 1; background: #e2e8f0;">Hủy</button>
+                <button type="submit" class="btn btn-primary" style="flex: 2;">Lưu số dư</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="dashboard-filter" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+    <div class="quick-filters" style="display: flex; gap: 8px;">
+        <button class="btn-input-pill active">Tháng này</button>
+        <button class="btn-input-pill">Tháng trước</button>
+        <button class="btn-input-pill">6 tháng qua</button>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <input type="date" class="filter-input" id="dash-start">
+        <span style="color: #64748b;">-</span>
+        <input type="date" class="filter-input" id="dash-end">
+        <button class="btn-filter" style="padding: 6px 12px;">Cập nhật</button>
+    </div>
+</div>
+
+<style>
+    /* CSS cho các nút hình con nhộng */
+    .btn-input-pill {
+        padding: 6px 16px;
+        border-radius: 20px;
+        border: 1px solid var(--color-border);
+        background: white;
+        color: var(--color-text-secondary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-input-pill.active {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+    }
+    .btn-input-pill:hover:not(.active) {
+        background: #f1f5f9;
+    }
+</style>
 
 <div class="charts-section">
     <h2 class="section-title" style="font-size: 24px; font-weight: 700; margin-bottom: 24px; color: #1e293b;">Xu Hướng Dòng Tiền & Phân Tích Chi Tiêu</h2>
@@ -54,221 +122,131 @@
     <div class="charts-grid" style="margin-bottom: 24px;">
         <div class="chart-card large">
             <div class="chart-header">Dòng Tiền Thu/Chi Ròng 6 Tháng Gần Nhất</div>
-            <div class="chart-container">
-                <canvas id="monthlyFlowChart"></canvas> 
-            </div>
+            <div class="chart-container"><canvas id="monthlyFlowChart"></canvas></div>
         </div>
 
         <div class="chart-card small">
             <div class="chart-header">Chi Tiêu Theo Danh Mục</div>
-            <div class="chart-container" style="height: 250px;">
-                <canvas id="categoryPieChart"></canvas>
-            </div>
+            <div class="chart-container" style="height: 250px;"><canvas id="categoryPieChart"></canvas></div>
         </div>
     </div>
-
-    <div class="row">
-        <div class="col-6">
-            <div class="chart-card">
-                <div class="chart-header">Xu Hướng Thu Nhập 6 Tháng</div>
-                <div class="chart-container" style="height: 250px;">
-                    <canvas id="monthlyIncomeChart"></canvas> 
-                </div>
-            </div>
-        </div>
-        <div class="col-6">
-            <div class="chart-card">
-                <div class="chart-header">Xu Hướng Chi Tiêu 6 Tháng</div>
-                <div class="chart-container" style="height: 250px;">
-                    <canvas id="monthlyExpenseChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
 
+<style>
+    #ai-widget-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+    #ai-float-button {
+        width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        font-size: 24px; transition: transform 0.3s ease;
+    }
+    #ai-float-button:hover { transform: scale(1.1); }
+    #ai-chat-window {
+        position: absolute; bottom: 80px; right: 0; width: 300px; background: white;
+        border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; flex-direction: column;
+        transition: all 0.3s ease;
+    }
+    .ai-chat-header { background: #667eea; color: white; padding: 10px 15px; border-radius: 15px 15px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    .ai-chat-hidden { visibility: hidden; opacity: 0; transform: translateY(20px); }
+</style>
+
 <script>
-    const PRIMARY_COLOR = '#667eea'; 
-    const SUCCESS_COLOR = '#10b981'; 
-    const DANGER_COLOR = '#ef4444';  
-    const ACCENT_COLORS = [
-        PRIMARY_COLOR, 
-        '#764ba2', 
-        '#4facfe', 
-        '#feca57', 
-        '#fa709a', 
-        '#43e97b', 
-    ];
+    // 1. LOGIC CHO AI WIDGET
+    const floatBtn = document.getElementById('ai-float-button');
+    const chatWindow = document.getElementById('ai-chat-window');
+    const closeBtn = document.getElementById('close-chat');
+    const aiBtn = document.getElementById('btn-ai-process');
+    const aiInput = document.getElementById('ai-chat-input');
+    const aiResult = document.getElementById('ai-chat-result');
 
-    const categoryLabels = JSON.parse('{{ category_labels_json | safe }}');
-    const categoryValues = JSON.parse('{{ category_values_json | safe }}');
-    
-    const monthlyLabels = ['Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12']; 
-    const monthlyIncome = [20000, 18000, 22000, 19000, 21000, 25000];
-    const monthlyExpenseRaw = [10000, 12000, 15000, 11000, 14000, 16000]; 
-    const monthlyExpenseNegative = monthlyExpenseRaw.map(v => -v); 
-    
+    floatBtn.addEventListener('click', () => chatWindow.classList.toggle('ai-chat-hidden'));
+    closeBtn.addEventListener('click', () => chatWindow.classList.add('ai-chat-hidden'));
 
-    function createLineChart(ctx, label, data, color) {
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: monthlyLabels,
-                datasets: [{
-                    label: label,
-                    data: data,
-                    borderColor: color,
-                    backgroundColor: color + '30', 
-                    tension: 0.4, 
-                    fill: true, 
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { 
-                        beginAtZero: true,
-                        grid: { color: '#e2e8f0', drawBorder: false },
-                        ticks: { 
-                            font: { size: 12 }, color: '#64748b',
-                            callback: function(value) {
-                                return value.toLocaleString() + 'K';
-                            } 
-                        },
-                    },
-                    x: { 
-                        grid: { display: false, drawBorder: false },
-                        ticks: { font: { size: 12, weight: '600' }, color: '#1e293b' },
-                    }
-                },
-                plugins: { 
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(30, 41, 59, 0.9)', 
-                        padding: 10,
-                        titleFont: { size: 13, weight: 'bold' },
-                        bodyFont: { size: 12 },
-                        cornerRadius: 6
-                    }
-                }
-            }
-        });
+    aiBtn.addEventListener('click', async () => {
+        const text = aiInput.value.trim();
+        if (!text) return;
+        aiBtn.innerText = "Đang phân tích...";
+        
+        try {
+            const resp = await fetch('/api/ai-input', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+            const res = await resp.json();
+            
+            if (res.success) {
+                const d = res.data;
+                aiResult.innerHTML = `
+                    <div style="background:#f0f7ff; padding:10px; border-radius:8px; font-size:13px; border-left:4px solid #667eea;">
+                        <b>Số tiền:</b> ${parseInt(d.amount).toLocaleString()}đ<br>
+                        <b>Loại:</b> ${d.category}<br>
+                        <button onclick='saveAI("${btoa(JSON.stringify(d))}")' 
+                                style="width:100%; margin-top:8px; background:#10b981; color:white; border:none; border-radius:5px; padding:6px; cursor:pointer;">Lưu ngay</button>
+                    </div>`;
+            } else { alert(res.message); }
+        } catch (e) { alert("Lỗi kết nối API AI"); }
+        finally { aiBtn.innerText = "Phân tích AI"; }
+    });
+
+    async function saveAI(encodedData) {
+        const data = JSON.parse(atob(encodedData));
+        const formData = new FormData();
+        formData.append('amount', data.amount);
+        formData.append('category', data.category);
+        formData.append('description', data.note);
+        formData.append('date', data.date);
+        formData.append('transaction_type', 'expense');
+
+        await fetch('/add-transaction', { method: 'POST', body: formData });
+        location.reload();
     }
 
-    // 1. Biểu đồ Đường: Thu Nhập Theo Tháng
-    const incomeCtx = document.getElementById('monthlyIncomeChart').getContext('2d');
-    createLineChart(incomeCtx, 'Thu nhập', monthlyIncome, SUCCESS_COLOR);
-    
-    // 2. Biểu đồ Đường: Chi Tiêu Theo Tháng
-    const expenseCtx = document.getElementById('monthlyExpenseChart').getContext('2d');
-    createLineChart(expenseCtx, 'Chi tiêu', monthlyExpenseRaw, DANGER_COLOR);
+    // 2. LOGIC CHO BIỂU ĐỒ (CHART.JS)
+    const categoryLabels = JSON.parse('{{ category_labels_json | safe }}');
+    const categoryValues = JSON.parse('{{ category_values_json | safe }}');
+    const monthlyLabels = ['Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'];
+    const monthlyIncome = [20000, 18000, 22000, 19000, 21000, 25000];
+    const monthlyExpenseNegative = [10000, 12000, 15000, 11000, 14000, 16000].map(v => -v);
 
-
-    // 3. Biểu đồ Cột: Dòng Tiền Thu/Chi 
-    const flowCtx = document.getElementById('monthlyFlowChart').getContext('2d');
-    new Chart(flowCtx, {
+    // Flow Chart
+    new Chart(document.getElementById('monthlyFlowChart'), {
         type: 'bar',
         data: {
             labels: monthlyLabels,
             datasets: [
-                {
-                    label: 'Thu nhập (Ngàn VND)',
-                    data: monthlyIncome,
-                    backgroundColor: SUCCESS_COLOR,
-                    borderRadius: 6,
-                },
-                {
-                    label: 'Chi tiêu (Ngàn VND)',
-                    data: monthlyExpenseNegative, 
-                    backgroundColor: DANGER_COLOR,
-                    borderRadius: 6,
-                }
+                { label: 'Thu nhập', data: monthlyIncome, backgroundColor: '#10b981', borderRadius: 5 },
+                { label: 'Chi tiêu', data: monthlyExpenseNegative, backgroundColor: '#ef4444', borderRadius: 5 }
             ]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            barPercentage: 0.8,
-            categoryPercentage: 0.8,
-            scales: {
-                y: { 
-                    beginAtZero: false,
-                    grid: { color: '#e2e8f0', drawBorder: false },
-                    ticks: { font: { size: 12 }, color: '#64748b',
-                        callback: function(value, index, ticks) {
-                            return Math.abs(value).toLocaleString() + 'K'; 
-                        } 
-                    },
-                    stacked: false
-                },
-                x: { 
-                    grid: { display: false, drawBorder: false },
-                    ticks: { font: { size: 12, weight: '600' }, color: '#1e293b' },
-                    stacked: false
-                }
-            },
-            plugins: { 
-                legend: { 
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        padding: 16
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                    padding: 10,
-                    titleFont: { size: 13, weight: 'bold' },
-                    bodyFont: { size: 12 },
-                    cornerRadius: 6
-                }
-            }
+            responsive: true, maintainAspectRatio: false,
+            scales: { y: { ticks: { callback: v => Math.abs(v) + 'K' } } }
         }
     });
 
-    // 4. Biểu đồ Tròn - Chi Tiêu Theo Danh Mục
-    const pieCtx = document.getElementById('categoryPieChart').getContext('2d');
-    new Chart(pieCtx, {
+    // Pie Chart
+    new Chart(document.getElementById('categoryPieChart'), {
         type: 'doughnut',
         data: {
             labels: categoryLabels,
-            datasets: [{
-                data: categoryValues,
-                backgroundColor: ACCENT_COLORS,
-                borderWidth: 0, 
-                hoverOffset: 8
-            }]
+            datasets: [{ data: categoryValues, backgroundColor: ['#667eea', '#764ba2', '#4facfe', '#feca57', '#fa709a', '#43e97b'] }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { 
-                    position: 'right', 
-                    labels: {
-                        padding: 16,
-                        font: { size: 12, weight: '600' },
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(30, 41, 59, 0.9)', 
-                    padding: 10,
-                    titleFont: { size: 13, weight: 'bold' },
-                    bodyFont: { size: 12 },
-                    cornerRadius: 6
-                }
-            },
-            cutout: '70%'
-        }
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right' } } }
     });
-    
+    function openBalanceModal() {
+    document.getElementById('balanceModal').style.display = 'flex';
+}
+
+function closeBalanceModal() {
+    document.getElementById('balanceModal').style.display = 'none';
+}
+
+// Đóng modal khi click ra ngoài vùng trắng
+window.onclick = function(event) {
+    const modal = document.getElementById('balanceModal');
+    if (event.target == modal) {
+        closeBalanceModal();
+    }
+}
 </script>
 {% endblock %}

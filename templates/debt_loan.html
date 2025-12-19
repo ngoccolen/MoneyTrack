@@ -37,29 +37,34 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th style="width: 10%;">NGÀY</th>
-                    <th style="width: 25%;">NGƯỜI LIÊN QUAN</th>
-                    <th style="width: 10%;">LOẠI</th>
+                    <th style="width: 15%;">NGÀY</th>
+                    <th style="width: 20%;">NGƯỜI LIÊN QUAN</th>
+                    <th style="width: 15%;">LOẠI</th>
                     <th style="width: 15%;">SỐ TIỀN GỐC</th>
                     <th style="width: 15%;">CÒN LẠI</th>
-                    <th style="width: 15%;">TRẠNG THÁI</th>
+                    <th style="width: 10%;">TRẠNG THÁI</th>
                     <th style="width: 10%; text-align: center;">THAO TÁC</th>
                 </tr>
             </thead>
             <tbody>
                 {% for dl in debt_loans %}
                 <tr>
-                    <td>{{ dl.NGÀY }}</td>
-                    <td>{{ dl['NGƯỜI LIÊN QUAN'] }}</td>
-                    <td class="{% if dl['LOẠI'] == 'CHO VAY' %}color-success{% else %}color-danger{% endif %}">{{ dl['LOẠI'] }}</td>
-                    <td>{{ vnd(dl['SỐ TIỀN']|abs) }} đ</td>
-                    <td>{{ vnd(dl['CÒN LẠI']|abs) }} đ</td>
+                    <td>{{ dl.date | format_date }}</td>
+                    <td>{{ dl.target }}</td>
+                    <td class="{% if dl.type == 'CHO VAY' %}color-success{% else %}color-danger{% endif %}">
+                        {{ dl.type }}
+                    </td>
+                    <td>{{ vnd(dl.total_amount) }} đ</td>
+                    <td>{{ vnd(dl.total_amount - dl.paid_amount) }} đ</td>
                     <td>
-                        <span class="color-secondary">{{ dl['TRẠNG THÁI'] }}</span>
+                        <span class="color-secondary">{{ dl.status }}</span>
                     </td>
                     <td style="text-align: center;">
                         <button class="btn btn-secondary" style="padding: 6px 10px; margin-right: 5px;">Sửa</button>
-                        <button class="btn btn-danger" style="padding: 6px 10px;">Xóa</button>
+                        <a href="{{ url_for('delete_debt', id=dl.id) }}" 
+                           class="btn btn-danger" 
+                           style="padding: 6px 10px; text-decoration: none;"
+                           onclick="return confirm('Bạn có chắc chắn muốn xóa khoản nợ này?')">Xóa</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -79,7 +84,6 @@
                     <label>CHỌN LOẠI GIAO DỊCH</label>
                     <div class="toggle-group" id="debt-loan-type-toggle">
                         <input type="hidden" name="loan_type" id="loan-type-input" value="loan-out">
-
                         <div class="toggle-btn active loan-out" data-type="loan-out">Cho Vay</div>
                         <div class="toggle-btn loan-in" data-type="loan-in">Vay Nợ</div>
                     </div>
@@ -112,7 +116,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-cancel">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Lưu</button>
+                    <button type="submit" class="btn btn-primary">Lưu thông tin</button>
                 </div>
             </form>
         </div>
@@ -127,34 +131,21 @@
         const typeToggle = document.getElementById('debt-loan-type-toggle');
         const typeInput = document.getElementById('loan-type-input');
         
-        // Hàm mở/đóng Modal
         const closeModal = () => { modal.style.display = 'none'; };
         const openModal = () => { modal.style.display = 'flex'; };
 
-        // Sự kiện mở Modal
-        openBtn.addEventListener('click', openModal);
+        if(openBtn) openBtn.addEventListener('click', openModal);
+        if(closeBtn) closeBtn.addEventListener('click', closeModal);
+        if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
-        // Sự kiện đóng Modal
-        closeBtn.addEventListener('click', closeModal);
-        cancelBtn.addEventListener('click', closeModal);
-
-        // Đóng Modal khi click ra ngoài
         window.addEventListener('click', (event) => {
-            if (event.target === modal) {
-                closeModal();
-            }
+            if (event.target === modal) closeModal();
         });
         
-        // Logic Toggle Cho Vay/Vay Nợ
         typeToggle.querySelectorAll('.toggle-btn').forEach(button => {
             button.addEventListener('click', function() {
-                // Xóa active khỏi tất cả các nút
                 typeToggle.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
-                
-                // Thêm active cho nút được click
                 this.classList.add('active');
-                
-                // Cập nhật giá trị hidden input
                 typeInput.value = this.dataset.type;
             });
         });
